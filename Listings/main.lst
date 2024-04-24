@@ -1,0 +1,290 @@
+C51 COMPILER V9.52.0.0   MAIN                                                              04/24/2024 23:57:44 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <at89x52.h>
+   2          #include <boebot.h>
+   3          #include <uart.h>
+   4          #include "GetSonarDis.h"
+   5          #include "Param.h"
+   6          #include "Move.h"
+   7          #include "Action.h"
+   8          
+   9          // debug 模式代码
+  10          #define ZERO 1              // 舵机调零
+  11          #define HCSR04 2            // 超声波模块测试
+  12          #define FAN_TEST 3          // 风扇测试
+  13          #define FIRE_TEST 4         // 红外传感器测试
+  14          #define EXTINGUISH_L_TEST 5 // 左侧灭火测试
+  15          #define EXTINGUISH_R_TEST 6 // 右侧灭火测试
+  16          #define TURN_L90 10         // 左转90度测试
+  17          #define TURN_BACKL 11       // 左转180度测试
+  18          #define TURN_R90 20         // 右转90度测试
+  19          #define TURN_BACKR 21       // 右转180度测试
+  20          #define TEST 88
+  21          // debug 模式调整
+  22          #define DEBUG EXTINGUISH_L_TEST
+  23          
+  24          // run 模式代码
+  25          #define DEBUG_ON 0 // 打开debug模式
+  26          #define S2 200     // S2模式
+  27          #define S3 300     // S3模式
+  28          // run 模式调整
+  29          #define RUN S2
+  30          
+  31          // run 模式优先级高于debug模式
+  32          #if (RUN != DEBUG_ON)
+  33          #undef DEBUG
+  34          #endif
+  35          
+  36          // 参数调整
+  37          FollowDistance = 130; // 沿墙距离
+*** WARNING C231 IN LINE 37 OF main.c: 'FollowDistance': redefinition
+  38          TurnLeftSteps = 36;   // 左转90度步数
+*** WARNING C231 IN LINE 38 OF main.c: 'TurnLeftSteps': redefinition
+  39          TurnRightSteps = 36;  // 右转90度步数
+*** WARNING C231 IN LINE 39 OF main.c: 'TurnRightSteps': redefinition
+  40          int fire[9];
+  41          fire[0] = 1;
+*** ERROR C136 IN LINE 41 OF main.c: invalid dimension size: [0]
+*** ERROR C231 IN LINE 41 OF main.c: 'fire': redefinition
+  42          
+  43          // S3路线图
+  44          #if (RUN == S3)
+              void runS3()
+              {
+                  Uchar c = 5;
+                  Uchar rside = 2;
+                  Uchar lside = 1;
+C51 COMPILER V9.52.0.0   MAIN                                                              04/24/2024 23:57:44 PAGE 2   
+
+                  Uchar toSide = 2;
+                  Uchar d = 20;
+              
+                  forwardA(rside); // 1huo 2
+                  turnFire(rside, 1);
+                  turnLeft();
+                  d = 20;
+                  forwardTurnB(rside, lside, d);
+                  correctFollow(rside);
+                  turnLeft();
+              
+                  correct();
+                  correct();
+                  correct();
+                  forwardA(rside);
+                  turnLeft();      //   to room
+                  forwardA(rside); // 9huo 2
+                  turnFire(rside, 1);
+                  // hui
+                  turnBack();
+                  forwardA(lside);
+                  turnRight();
+                  forwardA(lside);
+                  turnLeft(); // out room
+              
+                  forwardA(rside);
+                  turnLeft();
+                  d = 20;
+                  forwardTurnB(rside, rside, d);
+                  correct();
+                  turnRight();
+              
+                  forwardA(lside); // 3huo 1        to room
+                  turnFire(lside, 1);
+                  turnRight();
+                  forwardA(lside);
+                  turnRight();
+                  forwardA(lside); // 2huo 1
+                  turnFire(lside, 1);
+              
+                  // hui
+                  turnRight();
+                  forwardA(lside);
+                  turnRight();
+                  correct();
+                  correct();
+                  correct();
+                  forwardA(lside);
+                  turnLeft();
+                  forwardA(rside);
+                  turnLeft();
+              
+                  forwardA(rside); // zai shizilukou      //out room
+                  turnLeft();
+                  forwardA(lside);
+                  turnRight();
+                  forwardA(lside);
+                  turnRight();
+                  forwardA(lside);
+                  delay_nms(10000);
+              }
+              #endif
+C51 COMPILER V9.52.0.0   MAIN                                                              04/24/2024 23:57:44 PAGE 3   
+
+ 112          
+ 113          // S2路线图
+ 114          #if (RUN == S2)
+ 115          void runS2()
+ 116          {
+ 117   1          Uchar c = 5;
+ 118   1          Uchar lside = 1;
+ 119   1          Uchar rside = 2;
+ 120   1          Uchar toSide = 2;
+ 121   1          Uchar d = 20;
+ 122   1          forwardA(lside);
+ 123   1          turnLeft();
+ 124   1          forwardA(rside); // way
+ 125   1          // 6huo 1
+ 126   1          turnFire(lside, 1); // to room
+ 127   1          turnRight();
+ 128   1          forwardA(lside); // 5huo 1
+ 129   1          turnFire(lside, 1);
+ 130   1          turnRight();
+ 131   1          forwardA(lside);
+ 132   1          turnRight();
+ 133   1          forwardA(lside); // 4huo 1
+ 134   1          turnFire(lside, 1);
+ 135   1          turnRight();
+ 136   1          forwardA(lside);
+ 137   1          turnLeft(); // kou
+ 138   1      
+ 139   1          forwardA(rside);
+ 140   1          turnLeft();
+ 141   1          d = 5;
+ 142   1          forwardTurnB(rside, rside, d);
+ 143   1          d = 7;
+ 144   1          forwardD(lside, d);
+ 145   1          turnRight();
+ 146   1          correct(); // lu
+ 147   1      
+ 148   1          forwardA(lside); // 8huo 1
+ 149   1          turnFire(lside, 1);
+ 150   1          turnRight();
+ 151   1          forwardA(lside); // 7huo 1
+ 152   1          turnFire(lside, 1);
+ 153   1          FollowDistance = 200;
+ 154   1          turnBack();
+ 155   1          forwardA(rside);
+ 156   1          turnLeft();
+ 157   1          FollowDistance = 130;
+ 158   1          forwardA(rside);
+ 159   1          turnRight();
+ 160   1          d = 20;
+ 161   1          forwardD(lside, d);
+ 162   1          turnRight();
+ 163   1          forwardA(rside);
+ 164   1          delay_nms(10000);
+ 165   1      }
+ 166          #endif
+ 167          
+ 168          // 主函数
+ 169          int main()
+ 170          {
+ 171   1          // 初始化
+ 172   1          LeftFire = 1;
+ 173   1          RightFire = 1;
+C51 COMPILER V9.52.0.0   MAIN                                                              04/24/2024 23:57:44 PAGE 4   
+
+ 174   1          Fan_Off;
+ 175   1          delay_nms(2000);
+ 176   1          uart_Init();
+ 177   1          ScanDis();
+ 178   1      #if (RUN == S2)
+ 179   1          runS2();
+ 180   1      #elif (RUN == S3)
+                  runS3();
+              #endif
+ 183   1      
+ 184   1      #ifdef DEBUG
+              #if (DEBUG == TEST)
+                  while (1)
+                  {
+                      stepFollow(1);
+                  }
+              #elif (DEBUG == ZERO)
+                  while (1)
+                  {
+                      Forward(0, 0);
+                  }
+              #elif (DEBUG == HCSR04)
+                  while (1)
+                  {
+                      ScanDis();
+                      printf("L:%d ", left_dis);
+                      printf("F:%d ", front_dis);
+                      printf("R:%d\n", right_dis);
+                  }
+              #elif (DEBUG == FAN_TEST)
+                  while (1)
+                  {
+                      Fan_On;
+                      delay_nms(5000);
+                      Fan_Off;
+                      delay_nms(5000);
+                  }
+              #elif (DEBUG == FIRE_TEST)
+                  while (1)
+                  {
+                      printf("L:%d--R:%d\n", LeftFire, RightFire);
+                      if ((LeftFire == 0) && (RightFire == 1))
+                      {
+                          turnLeft();
+                      }
+                      else if ((LeftFire == 1) && (RightFire == 0))
+                      {
+                          turnRight();
+                      }
+                  }
+              #elif (DEBUG == EXTINGUISH_L_TEST)
+                  while (1)
+                  {
+                      delay_nms(5000);
+                      turnFire(1, 1);
+                      delay_nms(5000);
+                  }
+              #elif (DEBUG == EXTINGUISH_R_TEST)
+                  while (1)
+                  {
+                      delay_nms(5000);
+                      turnFire(2, 1);
+C51 COMPILER V9.52.0.0   MAIN                                                              04/24/2024 23:57:44 PAGE 5   
+
+                      delay_nms(5000);
+                  }
+              #elif (DEBUG == TURN_L90)
+                  while (1)
+                  {
+                      turnLeft();
+                      delay_nms(2000);
+                  }
+              #elif (DEBUG == TURN_BACKL)
+                  while (1)
+                  {
+                      turnBackL();
+                      delay_nms(2000);
+                  }
+              #elif (DEBUG == TURN_R90)
+                  while (1)
+                  {
+                      turnRight();
+                      delay_nms(2000);
+                  }
+              #elif (DEBUG == TURN_BACKR)
+                  while (1)
+                  {
+                      turnBackR();
+                      delay_nms(2000);
+                  }
+              #endif
+              #endif
+ 264   1          return 0;
+ 265   1      }
+
+C51 COMPILATION COMPLETE.  3 WARNING(S),  2 ERROR(S)

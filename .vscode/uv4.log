@@ -1,0 +1,6 @@
+Build target 'Target 1'
+compiling Action.c...
+Action.c(159): warning C206: 'moveStep': missing function-prototype
+Action.c(159): error C267: 'moveStep': requires ANSI-style prototype
+Target not created.
+Build Time Elapsed:  00:00:00

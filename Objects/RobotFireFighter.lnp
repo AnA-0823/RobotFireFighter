@@ -1,0 +1,7 @@
+".\Objects\STARTUP.obj",
+".\Objects\GetSonarDis.obj",
+".\Objects\Move.obj",
+".\Objects\Action.obj",
+".\Objects\main.obj" 
+TO ".\Objects\RobotFireFighter" 
+PRINT(".\Listings\RobotFireFighter.m51") RAMSIZE(256) 
